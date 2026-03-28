@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Suhu - Hukum Pendinginan Newton</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: url('maungafrika.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .math-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Panel Content */
+        .panel {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-calculate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Results */
+        .result-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .result-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .temp-bar {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .temp-bar-item {
+            margin-bottom: 15px;
+        }
+
+        .temp-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .bar-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 30px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ff8e53);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 10px;
+        }
+
+        .explanation h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .explanation p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .formula {
+            font-family: monospace;
+            background: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* Info Cards */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-card .k-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #764ba2;
+            margin: 10px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .panel {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌡️ Kalkulator Suhu</h1>
+            <p>Hukum Pendinginan Newton | Aproksimasi dengan Deret Taylor</p>
+            <div class="math-badge">
+                T(t) = Tₗ + (T₀ - Tₗ) × e^(-k·t)
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(0)">📊 Hitung Suhu</button>
+            <button class="tab-btn" onclick="switchTab(1)">⏱️ Hitung Waktu</button>
+            <button class="tab-btn" onclick="switchTab(2)">📋 Tabel Interval</button>
+            <button class="tab-btn" onclick="switchTab(3)">ℹ️ Info Konstanta</button>
+        </div>
+
+        <!-- Panel 1: Hitung Suhu -->
+        <div id="panel0" class="panel active">
+            <h2>📊 Hitung Suhu Setelah Waktu Tertentu</h2>
+            <div class="form-group">
+                <label>Suhu Awal (°C)</label>
+                <input type="number" id="temp_awal" value="85" step="any">
+            </div>
+            <div class="form-group">
+                <label>Suhu Lingkungan (°C)</label>
+                <input type="number" id="temp_lingkungan" value="25" step="any">
+            </div>
+            <div class="form-group">
+                <label>Waktu (menit)</label>
+                <input type="number" id="waktu" value="10" step="any">
+            </div>
+            <div class="form-group">
+                <label>Jenis Benda / Konstanta Pendinginan (k)</label>
+                <select id="konstanta_select" onchange="updateKonstanta()">
+                    <option value="0.05">Kopi/Teh dalam cangkir terbuka (k = 0.05)</option>
+                    <option value="0.02">Minuman dalam termos (k = 0.02)</option>
+                    <option value="0.07">Makanan di piring (k = 0.07)</option>
+                    <option value="0.10">Makanan di kulkas (k = 0.10)</option>
+                    <option value="0.04">Air dalam gelas (k = 0.04)</option>
+                    <option value="custom">Custom - Masukkan sendiri</option>
+                </select>
+            </div>
+            <div class="form-group" id="custom_k_div" style="display: none;">
+                <label>Nilai Konstanta k (custom)</label>
+                <input type="number" id="konstanta_custom" value="0.05" step="any">
+            </div>
+            <button class="btn-calculate" onclick="hitungSuhu()">Hitung Suhu</button>
+            
+            <div id="hasil_suhu"></div>
+        </div>
+
+        <!-- Panel 2: Hitung Waktu -->
+        <div id="panel1" class="panel">
+            <h2>⏱️ Hitung Waktu untuk Mencapai Suhu Tertentu</h2>
+            <div class="form-group">
+                <label>Suhu Awal (°C)</label>
+                <input type="number" id="waktu_temp_awal" value="85" step="any">
+            </div>
+            <div class="form-group">
+                <label>Suhu Lingkungan (°C)</label>
+                <input type="number" id="waktu_temp_lingkungan" value="25" step="any">
+            </div>
+            <div class="form-group">
+                <label>Suhu Target (°C)</label>
+                <input type="number" id="waktu_temp_target" value="60" step="any">
+            </div>
+            <div class="form-group">
+                <label>Konstanta Pendinginan (k)</label>
+                <input type="number" id="waktu_konstanta" value="0.05" step="any" placeholder="Contoh: 0.05">
+            </div>
+            <button class="btn-calculate" onclick="hitungWaktu()">Hitung Waktu</button>
+            
+            <div id="hasil_waktu"></div>
+        </div>
+
+        <!-- Panel 3: Tabel Interval -->
+        <div id="panel2" class="panel">
+            <h2>📋 Tabel Perubahan Suhu per Interval</h2>
+            <div class="form-group">
+                <label>Suhu Awal (°C)</label>
+                <input type="number" id="tabel_temp_awal" value="85" step="any">
+            </div>
+            <div class="form-group">
+                <label>Suhu Lingkungan (°C)</label>
+                <input type="number" id="tabel_temp_lingkungan" value="25" step="any">
+            </div>
+            <div class="form-group">
+                <label>Konstanta Pendinginan (k)</label>
+                <input type="number" id="tabel_konstanta" value="0.05" step="any">
+            </div>
+            <div class="form-group">
+                <label>Total Waktu (menit)</label>
+                <input type="number" id="tabel_total_waktu" value="30" step="any">
+            </div>
+            <div class="form-group">
+                <label>Interval Waktu (menit)</label>
+                <input type="number" id="tabel_interval" value="5" step="any">
+            </div>
+            <button class="btn-calculate" onclick="buatTabel()">Buat Tabel</button>
+            
+            <div id="hasil_tabel" class="table-container"></div>
+        </div>
+
+        <!-- Panel 4: Info Konstanta -->
+        <div id="panel3" class="panel">
+            <h2>ℹ️ Informasi Konstanta Pendinginan</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>☕ Kopi/Teh Cangkir</h3>
+                    <div class="k-value">k = 0.05</div>
+                    <p>Cepat mendingin karena kontak langsung dengan udara terbuka</p>
+                </div>
+                <div class="info-card">
+                    <h3>🧊 Termos</h3>
+                    <div class="k-value">k = 0.02</div>
+                    <p>Lambat mendingin, isolasi termal yang baik</p>
+                </div>
+                <div class="info-card">
+                    <h3>🍽️ Makanan di Piring</h3>
+                    <div class="k-value">k = 0.07</div>
+                    <p>Cukup cepat, permukaan luas</p>
+                </div>
+                <div class="info-card">
+                    <h3>❄️ Makanan di Kulkas</h3>
+                    <div class="k-value">k = 0.10</div>
+                    <p>Sangat cepat, suhu lingkungan rendah</p>
+                </div>
+                <div class="info-card">
+                    <h3>💧 Air dalam Gelas</h3>
+                    <div class="k-value">k = 0.04</div>
+                    <p>Kecepatan sedang</p>
+                </div>
+                <div class="info-card">
+                    <h3>🧑 Badan Manusia</h3>
+                    <div class="k-value">k = 0.03</div>
+                    <p>Perlahan karena ada sistem termoregulasi</p>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h4>📖 Apa itu Konstanta Pendinginan (k)?</h4>
+                <p>Konstanta k adalah angka yang menunjukkan seberapa cepat suatu benda berubah suhunya. 
+                Semakin besar nilai k, semakin cepat perubahan suhu terjadi.</p>
+                <br>
+                <h4>🧪 Cara Menghitung k dari Data</h4>
+                <p>Jika Anda mengetahui suhu awal dan suhu setelah waktu t, Anda bisa menghitung k dengan rumus:</p>
+                <div class="formula">k = -ln((T_t - T_ling) / (T_awal - T_ling)) / t</div>
+                <br>
+                <h4>📐 Rumus Deret Taylor yang Digunakan</h4>
+                <p>Program ini menggunakan deret Taylor untuk menghitung e^x:</p>
+                <div class="formula">e^x = 1 + x + x²/2! + x³/3! + x⁴/4! + ...</div>
+                <p>Dengan x = -k × t, program menghitung nilai eksponensial secara akurat.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi Deret Taylor untuk e^x
+        function taylorExp(x, nTerms = 15) {
+            let result = 0;
+            for (let n = 0; n < nTerms; n++) {
+                result += Math.pow(x, n) / factorial(n);
+            }
+            return result;
+        }
+
+        function factorial(n) {
+            if (n === 0 || n === 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+
+        // Fungsi menghitung suhu dengan Hukum Pendinginan Newton
+        function hitungSuhuNewton(tempAwal, tempLingkungan, waktu, k) {
+            // e^(-k * t) menggunakan deret Taylor
+            const eksponen = -k * waktu;
+            const e_kt = taylorExp(eksponen, 15);
+            
+            // Rumus pendinginan Newton
+            const tempAkhir = tempLingkungan + (tempAwal - tempLingkungan) * e_kt;
+            return tempAkhir;
+        }
+
+        // Fungsi menghitung waktu yang dibutuhkan
+        function hitungWaktuNewton(tempAwal, tempLingkungan, tempTarget, k) {
+            // T(t) = T_ling + (T_awal - T_ling) × e^(-kt)
+            // e^(-kt) = (T_target - T_ling) / (T_awal - T_ling)
+            const pembilang = tempTarget - tempLingkungan;
+            const penyebut = tempAwal - tempLingkungan;
+            
+            if (pembilang === 0) return 0;
+            if (penyebut === 0) return Infinity;
+            
+            const rasio = pembilang / penyebut;
+            if (rasio <= 0) return -1;
+            
+            const waktu = -Math.log(rasio) / k;
+            return waktu;
+        }
+
+        // UI Helper
+        function updateKonstanta() {
+            const select = document.getElementById('konstanta_select');
+            const customDiv = document.getElementById('custom_k_div');
+            
+            if (select.value === 'custom') {
+                customDiv.style.display = 'block';
+            } else {
+                customDiv.style.display = 'none';
+            }
+        }
+
+        function getKonstanta() {
+            const select = document.getElementById('konstanta_select');
+            if (select.value === 'custom') {
+                return parseFloat(document.getElementById('konstanta_custom').value);
+            }
+            return parseFloat(select.value);
+        }
+
+        // Panel 1: Hitung Suhu
+        function hitungSuhu() {
+            const tempAwal = parseFloat(document.getElementById('temp_awal').value);
+            const tempLingkungan = parseFloat(document.getElementById('temp_lingkungan').value);
+            const waktu = parseFloat(document.getElementById('waktu').value);
+            const k = getKonstanta();
+            
+            if (isNaN(tempAwal) || isNaN(tempLingkungan) || isNaN(waktu) || isNaN(k)) {
+                alert('Masukkan semua data dengan benar!');
+                return;
+            }
+            
+            const tempAkhir = hitungSuhuNewton(tempAwal, tempLingkungan, waktu, k);
+            const perubahan = tempAkhir - tempAwal;
+            const status = tempAkhir > tempAwal ? 'Memanas' : (tempAkhir < tempAwal ? 'Mendingin' : 'Setimbang');
+            
+            // Buat range untuk bar chart
+            const minTemp = Math.min(tempAwal, tempAkhir, tempLingkungan);
+            const maxTemp = Math.max(tempAwal, tempAkhir, tempLingkungan);
+            const range = maxTemp - minTemp;
+            
+            const html = `
+                <div class="result-card">
+                    <div class="result-title">📊 Hasil Perhitungan</div>
+                    <div class="result-item">
+                        <span class="result-label">Suhu Awal:</span>
+                        <span class="result-value">${tempAwal.toFixed(1)}°C</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Suhu Lingkungan:</span>
+                        <span class="result-value">${tempLingkungan.toFixed(1)}°C</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Waktu:</span>
+                        <span class="result-value">${waktu.toFixed(1)} menit</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Konstanta k:</span>
+                        <span class="result-value">${k.toFixed(3)}</span>
+                    </div>
+                    <div class="result-item" style="border-top: 2px solid #667eea; margin-top: 10px; padding-top: 15px;">
+                        <span class="result-label" style="font-size: 1.1rem;">Suhu Akhir:</span>
+                        <span class="result-value" style="font-size: 1.8rem;">${tempAkhir.toFixed(1)}°C</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Perubahan:</span>
+                        <span class="result-value" style="color: ${perubahan > 0 ? '#28a745' : '#dc3545'}">${perubahan > 0 ? '+' : ''}${perubahan.toFixed(1)}°C</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Status:</span>
+                        <span class="result-value">${status}</span>
+                    </div>
+                    
+                    <div class="temp-bar">
+                        <div class="temp-bar-item">
+                            <div class="temp-bar-label">
+                                <span>🌡️ Suhu Awal</span>
+                                <span>${tempAwal.toFixed(1)}°C</span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: ${((tempAwal - minTemp) / range) * 100}%; background: linear-gradient(90deg, #ff6b6b, #ff8e53);">
+                                    ${tempAwal.toFixed(1)}°C
+                                </div>
+                            </div>
+                        </div>
+                        <div class="temp-bar-item">
+                            <div class="temp-bar-label">
+                                <span>🌡️ Suhu Akhir</span>
+                                <span>${tempAkhir.toFixed(1)}°C</span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: ${((tempAkhir - minTemp) / range) * 100}%; background: linear-gradient(90deg, #4facfe, #00f2fe);">
+                                    ${tempAkhir.toFixed(1)}°C
+                                </div>
+                            </div>
+                        </div>
+                        <div class="temp-bar-item">
+                            <div class="temp-bar-label">
+                                <span>🏠 Suhu Lingkungan</span>
+                                <span>${tempLingkungan.toFixed(1)}°C</span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: ${((tempLingkungan - minTemp) / range) * 100}%; background: linear-gradient(90deg, #43e97b, #38f9d7);">
+                                    ${tempLingkungan.toFixed(1)}°C
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <h4>💡 Penjelasan Matematika</h4>
+                        <p>Perhitungan menggunakan <strong>Hukum Pendinginan Newton</strong>:</p>
+                        <div class="formula">T(t) = Tₗ + (T₀ - Tₗ) × e<sup>-k·t</sup></div>
+                        <p>Nilai <strong>e<sup>-${k.toFixed(3)} × ${waktu.toFixed(1)}</sup></strong> dihitung menggunakan <strong>Deret Taylor</strong>:</p>
+                        <div class="formula">e<sup>x</sup> = 1 + x + x²/2! + x³/3! + x⁴/4! + ...</div>
+                        <p>Dengan x = ${(-k * waktu).toFixed(4)}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('hasil_suhu').innerHTML = html;
+        }
+
+        // Panel 2: Hitung Waktu
+        function hitungWaktu() {
+            const tempAwal = parseFloat(document.getElementById('waktu_temp_awal').value);
+            const tempLingkungan = parseFloat(document.getElementById('waktu_temp_lingkungan').value);
+            const tempTarget = parseFloat(document.getElementById('waktu_temp_target').value);
+            const k = parseFloat(document.getElementById('waktu_konstanta').value);
+            
+            if (isNaN(tempAwal) || isNaN(tempLingkungan) || isNaN(tempTarget) || isNaN(k)) {
+                alert('Masukkan semua data dengan benar!');
+                return;
+            }
+            
+            // Validasi
+            if ((tempAwal > tempLingkungan && tempTarget < tempLingkungan) ||
+                (tempAwal < tempLingkungan && tempTarget > tempLingkungan)) {
+                document.getElementById('hasil_waktu').innerHTML = `
+                    <div class="result-card">
+                        <div class="result-title">⚠️ Peringatan</div>
+                        <p>Tidak mungkin mencapai suhu di ${tempTarget < tempLingkungan ? 'bawah' : 'atas'} suhu lingkungan!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const waktu = hitungWaktuNewton(tempAwal, tempLingkungan, tempTarget, k);
+            
+            let html = `
+                <div class="result-card">
+                    <div class="result-title">⏱️ Hasil Perhitungan</div>
+                    <div class="result-item">
+                        <span class="result-label">Suhu Awal:</span>
+                        <span class="result-value">${tempAwal.toFixed(1)}°C</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Suhu Target:</span>
+                        <span class="result-value">${tempTarget.toFixed(1)}°C</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Suhu Lingkungan:</span>
+                        <span class="result-value">${tempLingkungan.toFixed(1)}°C</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Konstanta k:</span>
+                        <span class="result-value">${k.toFixed(3)}</span>
+                    </div>
+            `;
+            
+            if (waktu < 0) {
+                html += `<div class="result-item">
+                    <span class="result-label">⚠️ Suhu Target:</span>
+                    <span class="result-value">Sudah terlewati!</span>
+                </div>`;
+            } else {
+                const jam = Math.floor(waktu / 60);
+                const menit = (waktu % 60).toFixed(1);
+                html += `
+                    <div class="result-item" style="border-top: 2px solid #667eea; margin-top: 10px; padding-top: 15px;">
+                        <span class="result-label" style="font-size: 1.1rem;">Waktu yang dibutuhkan:</span>
+                        <span class="result-value" style="font-size: 1.5rem;">${waktu.toFixed(1)} menit</span>
+                    </div>
+                    ${jam > 0 ? `<div class="result-item">
+                        <span class="result-label">Setara dengan:</span>
+                        <span class="result-value">${jam} jam ${menit} menit</span>
+                    </div>` : ''}
+                `;
+            }
+            
+            html += `
+                    <div class="explanation">
+                        <h4>📐 Rumus yang Digunakan</h4>
+                        <div class="formula">t = -ln((T_target - T_ling) / (T_awal - T_ling)) / k</div>
+                        <p>t = -ln((${tempTarget.toFixed(1)} - ${tempLingkungan.toFixed(1)}) / (${tempAwal.toFixed(1)} - ${tempLingkungan.toFixed(1)})) / ${k.toFixed(3)}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('hasil_waktu').innerHTML = html;
+        }
+
+        // Panel 3: Tabel Interval
+        function buatTabel() {
+            const tempAwal = parseFloat(document.getElementById('tabel_temp_awal').value);
+            const tempLingkungan = parseFloat(document.getElementById('tabel_temp_lingkungan').value);
+            const k = parseFloat(document.getElementById('tabel_konstanta').value);
+            const totalWaktu = parseFloat(document.getElementById('tabel_total_waktu').value);
+            const interval = parseFloat(document.getElementById('tabel_interval').value);
+            
+            if (isNaN(tempAwal) || isNaN(tempLingkungan) || isNaN(k) || isNaN(totalWaktu) || isNaN(interval)) {
+                alert('Masukkan semua data dengan benar!');
+                return;
+            }
+            
+            let tabelHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu (menit)</th>
+                            <th>Suhu (°C)</th>
+                            <th>Perubahan</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            let waktu = 0;
+            let suhuSebelumnya = tempAwal;
+            
+            while (waktu <= totalWaktu) {
+                const suhu = hitungSuhuNewton(tempAwal, tempLingkungan, waktu, k);
+                const perubahan = suhu - suhuSebelumnya;
+                const status = Math.abs(suhu - tempLingkungan) < 0.1 ? 'Setimbang' : 
+                               (suhu > tempLingkungan ? 'Mendingin' : 'Memanas');
+                
+                const perubahanStr = perubahan > 0 ? `+${perubahan.toFixed(2)}°C` : 
+                                    (perubahan < 0 ? `${perubahan.toFixed(2)}°C` : '0.00°C');
+                
+                tabelHtml += `
+                    <tr>
+                        <td>${waktu.toFixed(1)}</td>
+                        <td><strong>${suhu.toFixed(1)}°C</strong></td>
+                        <td>${perubahanStr}</td>
+                        <td>${status}</td>
+                    </tr>
+                `;
+                
+                suhuSebelumnya = suhu;
+                waktu += interval;
+            }
+            
+            tabelHtml += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('hasil_tabel').innerHTML = tabelHtml;
+        }
+
+        // Tab Switching
+        function switchTab(index) {
+            // Update tab buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach((btn, i) => {
+                if (i === index) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Update panels
+            for (let i = 0; i < 4; i++) {
+                const panel = document.getElementById(`panel${i}`);
+                if (i === index) {
+                    panel.classList.add('active');
+                } else {
+                    panel.classList.remove('active');
+                }
+            }
+        }
+        
+        // Inisialisasi
+        updateKonstanta();
+    </script>
+</body>
+</html>
